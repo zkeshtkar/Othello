@@ -50,7 +50,6 @@ class Board:
         global conv
         conv = 0
 
-
     # Updating the board to the screen
     def update(self):
         screen.delete("highlight")
@@ -136,7 +135,7 @@ class Board:
         # Drawing of highlight circles
         for x in range(8):
             for y in range(8):
-                if self.player == 0:
+                if self.player == 0 and (not AIwAI):
                     if valid(self.array, self.player, x, y):
                         screen.create_oval(68 + 50 * x, 68 + 50 * y, 32 + 50 * (x + 1), 32 + 50 * (y + 1),
                                            tags="highlight", fill="#008000", outline="#008000")
@@ -146,7 +145,7 @@ class Board:
             self.drawScoreBoard()
             screen.update()
             # If the computer is AI, make a move
-            if self.player == 1:
+            if self.player == 1 and (not AIwAI):
                 startTime = time()
                 self.oldarray = self.array
                 alphaBetaResult = self.alphaBeta(self.array, depth, -float("inf"), float("inf"), 1)
@@ -163,6 +162,39 @@ class Board:
                 nodes = 0
                 # Player must pass?
                 self.passTest()
+            elif self.player == 0 and AIwAI:
+                startTime = time()
+                self.oldarray = self.array
+                alphaBetaResult = self.alphaBeta(self.array, depth, -float("inf"), float("inf"), 1)
+                self.array = alphaBetaResult[1]
+
+                if len(alphaBetaResult) == 3:
+                    position = alphaBetaResult[2]
+                    self.oldarray[position[0]][position[1]] = "w"
+
+                self.player = 1 - self.player
+                deltaTime = round((time() - startTime) * 100) / 100
+                if deltaTime < 2:
+                    sleep(2 - deltaTime)
+                nodes = 0
+                self.update()
+
+            elif self.player == 1 and AIwAI:
+                startTime = time()
+                self.oldarray = self.array
+                alphaBetaResult = self.alphaBeta(self.array, depth, -float("inf"), float("inf"), 1)
+                self.array = alphaBetaResult[1]
+
+                if len(alphaBetaResult) == 3:
+                    position = alphaBetaResult[2]
+                    self.oldarray[position[0]][position[1]] = "b"
+
+                self.player = 1 - self.player
+                deltaTime = round((time() - startTime) * 100) / 100
+                if deltaTime < 2:
+                    sleep(2 - deltaTime)
+                nodes = 0
+                self.update()
 
         else:
             screen.create_text(250, 550, anchor="c", font=("Consolas", 15), text="The game is done!")
@@ -305,7 +337,6 @@ class Board:
                     test = move(node, x, y)
                     boards.append(test)
                     choices.append([x, y])
-
 
         if depth == 0 or len(choices) == 0:
             return ([decentHeuristic(node, 1 - maximizing), node])
@@ -453,7 +484,6 @@ def moveconv(passedArray, x, y):
         array[node[0]][node[1]] = colour
 
     return [array, len(convert)]
-
 
 
 # FUNCTION: Returns a board after making a move according to Othello rules
@@ -725,7 +755,6 @@ def finalHeuristic(array, player, num_can_move):
     else:
         p = 0
 
-
     if my_front_tiles > opp_front_tiles:
         f = -(100.0 * my_front_tiles) / (my_front_tiles + opp_front_tiles)
     elif my_front_tiles < opp_front_tiles:
@@ -828,19 +857,6 @@ def finalHeuristic(array, player, num_can_move):
     score = (10 * p) + (801.724 * c) + (382.026 * l) + (78.922 * m) + (74.396 * f) + (10 * d)
     return score
 
-    # if moves <= 8:
-    #     numMoves = 0
-    #     for x in range(8):
-    #         for y in range(8):
-    #             if valid(array, player, x, y):
-    #                 numMoves += 1
-    #     return numMoves + decentHeuristic(array, player)
-    # elif moves <= 52:
-    #     return decentHeuristic(array, player)
-    # elif moves <= 58:
-    #     return slightlyLessDumbScore(array, player)
-    # else:
-    #     return dumbScore(array, player)
 
 
 # Checks if a move is valid for a given array.
@@ -903,6 +919,8 @@ def valid(array, player, x, y):
 # When the user clicks, if it's a valid move, make the move
 def clickHandle(event):
     global depth
+    global AIwAI
+    AIwAI = False
     xMouse = event.x
     yMouse = event.y
     if running:
@@ -912,7 +930,7 @@ def clickHandle(event):
             playGame()
         else:
             # Is it the player's turn?
-            if board.player == 0:
+            if board.player == 0 and (not AIwAI):
                 # Delete the highlights
                 x = int((event.x - 50) / 50)
                 y = int((event.y - 50) / 50)
@@ -922,21 +940,27 @@ def clickHandle(event):
                 if 0 <= x <= 7 and 0 <= y <= 7:
                     if valid(board.array, board.player, x, y):
                         board.boardMove(x, y)
+
     else:
         # Difficulty clicking
         if 300 <= yMouse <= 350:
             # One star
-            if 25 <= xMouse <= 155:
+            if 5 <= xMouse <= 120:
                 depth = 1
                 playGame()
             # Two star
-            elif 180 <= xMouse <= 310:
+            elif 130 <= xMouse <= 245:
                 depth = 4
                 playGame()
             # Three star
-            elif 335 <= xMouse <= 465:
-                depth = 6
+            elif 255 <= xMouse <= 360:
+                depth = 10
                 playGame()
+            elif 380 <= xMouse <= 495:
+                AIwAI = True
+                depth = 4
+                playGame()
+
 
 
 def keyHandle(event):
@@ -974,19 +998,19 @@ def runGame():
     screen.create_text(250, 200, anchor="c", text="Othello", font=("Consolas", 50), fill="#fff")
 
     # Creating the difficulty buttons
-    for i in range(3):
+    for i in range(4):
         # Background
-        screen.create_rectangle(25 + 155 * i, 310, 155 + 155 * i, 355, fill="#000", outline="#000")
-        screen.create_rectangle(25 + 155 * i, 300, 155 + 155 * i, 350, fill="#111", outline="#111")
+        screen.create_rectangle(5 + 125 * i, 310, 120 + 125 * i, 355, fill="#000", outline="#000")
+        screen.create_rectangle(5 + 125 * i, 300, 120 + 125 * i, 350, fill="#111", outline="#111")
 
-        spacing = 130 / (i + 2)
+        spacing = 115 / (i + 2)
         for x in range(i + 1):
             # Star with double shadow
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 326, anchor="c", text="\u2605", font=("Consolas", 25),
+            screen.create_text(8 + (x + 1) * spacing + 125 * i, 326, anchor="c", text="\u2605", font=("Consolas", 20),
                                fill="#b29600")
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 327, anchor="c", text="\u2605", font=("Consolas", 25),
+            screen.create_text(8 + (x + 1) * spacing + 125 * i, 327, anchor="c", text="\u2605", font=("Consolas", 20),
                                fill="#b29600")
-            screen.create_text(25 + (x + 1) * spacing + 155 * i, 325, anchor="c", text="\u2605", font=("Consolas", 25),
+            screen.create_text(8 + (x + 1) * spacing + 125 * i, 325, anchor="c", text="\u2605", font=("Consolas", 20),
                                fill="#ffd700")
 
     screen.update()
