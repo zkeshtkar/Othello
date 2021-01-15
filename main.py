@@ -25,7 +25,7 @@ root = Tk()
 screen = Canvas(root, width=500, height=600, background="#222", highlightthickness=0)
 screen.pack()
 global WEIGHT
-global subweight
+
 
 class Board:
     def __init__(self):
@@ -858,7 +858,7 @@ def clickHandle(event):
                 fitness = []
                 pop = []
                 for i in range(20):
-                    randomweight()
+                    subweight = randomweight()
                     playGame()
                     pop.append(subweight)
                     fitness.append(final_score)
@@ -878,8 +878,8 @@ def crossover(p1, p2):
     for i in range(10):
         c1.append(a * p1[i] + (1 - a) * p2[i])
     c1 = mutation(c1)
-    subweight = c1
     pop.append(c1)
+    make_WEIGHT(c1)
     playGame()
     fitness.append(final_score)
 
@@ -887,14 +887,14 @@ def crossover(p1, p2):
     for i in range(10):
         c2.append(a * p2[i] + (1 - a) * p1[i])
     c2 = mutation(c2)
-    subweight = c2
-    make_WEIGHT()
+    pop.append(c2)
+    make_WEIGHT(c2)
     playGame()
     fitness.append(final_score)
 
 def mutation(child):
     pmut = 0.3
-    pmchild = random();
+    pmchild = random()
     if pmut <= pmchild:
         noise = randint(-50, 50)
         for i in range(10):
@@ -969,12 +969,14 @@ def playGame():
     board.update()
 
 def randomweight():
+    subweight = []
     for i in range(10):
         x = randint(-1000, 1000)
         subweight.append(x)
-    make_WEIGHT()
+    make_WEIGHT(subweight)
+    return subweight
 
-def make_WEIGHT():
+def make_WEIGHT(subweight):
     WEIGHT.append([subweight[0], subweight[1], subweight[2], subweight[3], subweight[3], subweight[2], subweight[1],
                    subweight[0]])
     WEIGHT.append([subweight[1], subweight[4], subweight[5], subweight[6], subweight[6], subweight[5], subweight[4],
