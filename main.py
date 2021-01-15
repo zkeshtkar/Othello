@@ -25,7 +25,7 @@ root = Tk()
 screen = Canvas(root, width=500, height=600, background="#222", highlightthickness=0)
 screen.pack()
 global WEIGHT
-
+WEIGHT = []
 
 class Board:
     def __init__(self):
@@ -862,15 +862,25 @@ def clickHandle(event):
                     playGame()
                     pop.append(subweight)
                     fitness.append(final_score)
-                genetic(fitness, pop)
+                for i in range(20):
+                    pop = genetic(pop)
+                max = []
+                fitnessmax = 0
+                for i in range(20):
+                    if fitness[i] > fitnessmax:
+                        max = pop[i]
+                print(max)
 
-def genetic(fitness, pop):
+
+
+def genetic(pop):
     for i in range(10):
-        a = randint(1, 20)
-        b = randint(1, 20)
+        a = randint(0, 19)
+        b = randint(0, 19)
         if a == b:
             i -= 1
         crossover(pop[a], pop[b])
+        return selection_remaining()
 
 def crossover(p1, p2):
     a = random()
@@ -892,6 +902,7 @@ def crossover(p1, p2):
     playGame()
     fitness.append(final_score)
 
+
 def mutation(child):
     pmut = 0.3
     pmchild = random()
@@ -900,6 +911,37 @@ def mutation(child):
         for i in range(10):
             child[i] += noise
     return child
+
+def selection_remaining():
+    sum_score = 0
+    result = []
+    for fit in fitness:
+        sum_score += fit
+    possibility_weighted = []
+    weighted = 0
+    for fit in fitness:
+        weighted += fit / sum_score
+        possibility_weighted.append(weighted)
+    fitnessres = []
+    for i in range(40):
+        randomNum = random()
+        length = len(possibility_weighted)
+        counter = 1
+        if randomNum <= possibility_weighted[0]:
+            result.append(pop[0])
+            fitness.append(fitness[0])
+
+        while counter < length:
+            if randomNum <= possibility_weighted[counter] and randomNum >= possibility_weighted[counter - 1] :
+                result.append(pop[counter])
+                fitnessres.append(fitness[counter])
+                break
+            counter += 1
+    fitness.clear()
+    for i in range(20):
+        fitness.append(fitnessres[i])
+    return result
+
 def keyHandle(event):
     symbol = event.keysym
     if symbol.lower() == "r":
@@ -977,6 +1019,7 @@ def randomweight():
     return subweight
 
 def make_WEIGHT(subweight):
+    WEIGHT.clear()
     WEIGHT.append([subweight[0], subweight[1], subweight[2], subweight[3], subweight[3], subweight[2], subweight[1],
                    subweight[0]])
     WEIGHT.append([subweight[1], subweight[4], subweight[5], subweight[6], subweight[6], subweight[5], subweight[4],
