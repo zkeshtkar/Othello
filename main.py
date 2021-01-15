@@ -706,13 +706,6 @@ def num_valid_move(array, colour):
 def finalHeuristic(array, player, num_can_move):
     my_tiles = 0
     opp_tiles = 0
-    my_front_tiles = 0
-    opp_front_tiles = 0
-    p = 0.0
-    c = 0.0
-    l = 0.0
-    m = 0.0
-    f = 0.0
     d = 0.0
     #
     if player == 1:
@@ -722,7 +715,11 @@ def finalHeuristic(array, player, num_can_move):
         colour = "w"
         opponent = "b"
 
-    if player == 1:
+
+    if player == 0 and AIwAI:
+        weight = WEIGHT
+
+    else:
         weight = []
         for x in range(8):
             weight.append([])
@@ -735,8 +732,6 @@ def finalHeuristic(array, player, num_can_move):
         weight[6] = [-3, -7, -4, 1, 1, -4, -7, -3]
         weight[7] = [20, -3, 11, 8, 8, 11, -3, 20]
 
-    if player == 0 and AIwAI:
-        weight = WEIGHT
 
     for i in range(8):
         for j in range(8):
