@@ -24,7 +24,8 @@ moves = 0
 root = Tk()
 screen = Canvas(root, width=500, height=600, background="#222", highlightthickness=0)
 screen.pack()
-
+global WEIGHT
+global subweight
 
 class Board:
     def __init__(self):
@@ -49,6 +50,7 @@ class Board:
         self.oldarray = self.array
         global conv
         conv = 0
+
 
     # Updating the board to the screen
     def update(self):
@@ -177,6 +179,8 @@ class Board:
                 if deltaTime < 2:
                     sleep(2 - deltaTime)
                 nodes = 0
+                # Player must pass?
+                self.passTest()
                 self.update()
 
             elif self.player == 1 and AIwAI:
@@ -194,6 +198,8 @@ class Board:
                 if deltaTime < 2:
                     sleep(2 - deltaTime)
                 nodes = 0
+                # Player must pass?
+                self.passTest()
                 self.update()
 
         else:
@@ -218,6 +224,7 @@ class Board:
     # METHOD: Draws scoreboard to screen
     def drawScoreBoard(self):
         global moves
+        global final_score
         # Deleting prior score elements
         screen.delete("score")
 
@@ -231,6 +238,7 @@ class Board:
                 elif self.array[x][y] == "b":
                     computer_score += 1
 
+        final_score = player_score
         if self.player == 0:
             player_colour = "green"
             computer_colour = "gray"
@@ -714,20 +722,21 @@ def finalHeuristic(array, player, num_can_move):
         colour = "w"
         opponent = "b"
 
-    X1 = [-1, -1, 0, 1, 1, 1, 0, -1]
-    Y1 = [0, 1, 1, 1, 0, -1, -1, -1]
+    if player == 1:
+        weight = []
+        for x in range(8):
+            weight.append([])
+        weight[0] = [20, -3, 11, 8, 8, 11, -3, 20]
+        weight[1] = [-3, -7, -4, 1, 1, -4, -7, -3]
+        weight[2] = [11, -4, 2, 2, 2, 2, -4, 11]
+        weight[3] = [8, 1, 2, -3, -3, 2, 1, 8]
+        weight[4] = [8, 1, 2, -3, -3, 2, 1, 8]
+        weight[5] = [11, -4, 2, 2, 2, 2, -4, 11]
+        weight[6] = [-3, -7, -4, 1, 1, -4, -7, -3]
+        weight[7] = [20, -3, 11, 8, 8, 11, -3, 20]
 
-    weight = []
-    for x in range(8):
-        weight.append([])
-    weight[0] = [20, -3, 11, 8, 8, 11, -3, 20]
-    weight[1] = [-3, -7, -4, 1, 1, -4, -7, -3]
-    weight[2] = [11, -4, 2, 2, 2, 2, -4, 11]
-    weight[3] = [8, 1, 2, -3, -3, 2, 1, 8]
-    weight[4] = [8, 1, 2, -3, -3, 2, 1, 8]
-    weight[5] = [11, -4, 2, 2, 2, 2, -4, 11]
-    weight[6] = [-3, -7, -4, 1, 1, -4, -7, -3]
-    weight[7] = [20, -3, 11, 8, 8, 11, -3, 20]
+    if player == 0 and AIwAI:
+        weight = WEIGHT
 
     for i in range(8):
         for j in range(8):
@@ -737,124 +746,9 @@ def finalHeuristic(array, player, num_can_move):
             elif array[i][j] == opponent:
                 d -= weight[i][j]
                 opp_tiles += 1
-            if array[i][j] != None:
-                for k in range(8):
-                    x = i + X1[k]
-                    y = j + Y1[k]
-                    if (x >= 0 and x < 8 and y >= 0 and y < 8 and array[x][y] == None):
-                        if array[i][j] == colour:
-                            my_front_tiles += 1
-                        else:
-                            opp_front_tiles += 1
-                        break
-
-    if my_tiles > opp_tiles:
-        p = (100.0 * my_tiles) / (my_tiles + opp_tiles)
-    elif my_tiles < opp_tiles:
-        p = -(100.0 * opp_tiles) / (my_tiles + opp_tiles)
-    else:
-        p = 0
-
-    if my_front_tiles > opp_front_tiles:
-        f = -(100.0 * my_front_tiles) / (my_front_tiles + opp_front_tiles)
-    elif my_front_tiles < opp_front_tiles:
-        f = (100.0 * opp_front_tiles) / (my_front_tiles + opp_front_tiles)
-    else:
-        f = 0
-
-    # Corner occupancy
-    my_tiles = opp_tiles = 0
-    if array[0][0] == colour:
-        my_tiles += 1
-    elif array[0][0] == opponent:
-        opp_tiles += 1
-    if array[0][7] == colour:
-        my_tiles += 1
-    elif array[0][7] == opponent:
-        opp_tiles += 1
-    if array[7][0] == colour:
-        my_tiles += 1
-    elif array[7][0] == opponent:
-        opp_tiles += 1
-    if array[7][7] == colour:
-        my_tiles += 1
-    elif array[7][7] == opponent:
-        opp_tiles += 1
-
-    c = 25 * (my_tiles - opp_tiles)
-
-    # Corner closeness
-    my_tiles = opp_tiles = 0
-    if array[0][0] is None:
-        if array[0][1] == colour:
-            my_tiles += 1
-        elif array[0][1] == opponent:
-            opp_tiles += 1
-        if array[1][1] == colour:
-            my_tiles += 1
-        elif array[1][1] == opponent:
-            opp_tiles += 1
-        if array[1][0] == colour:
-            my_tiles += 1
-        elif array[1][0] == opponent:
-            opp_tiles += 1
-
-    if array[0][7] is None:
-        if array[0][6] == colour:
-            my_tiles += 1
-        elif array[0][6] == opponent:
-            opp_tiles += 1
-        if array[1][6] == colour:
-            my_tiles += 1
-        elif array[1][6] == opponent:
-            opp_tiles += 1
-        if array[1][7] == colour:
-            my_tiles += 1
-        elif array[1][7] == opponent:
-            opp_tiles += 1
-
-    if array[7][0] is None:
-        if array[7][1] == colour:
-            my_tiles += 1
-        elif array[7][1] == opponent:
-            opp_tiles += 1
-        if array[6][1] == colour:
-            my_tiles += 1
-        elif array[6][1] == opponent:
-            opp_tiles += 1
-        if array[6][0] == colour:
-            my_tiles += 1
-        elif array[6][0] == opponent:
-            opp_tiles += 1
-
-    if array[7][7] is None:
-        if array[6][7] == colour:
-            my_tiles += 1
-        elif array[6][7] == opponent:
-            opp_tiles += 1
-        if array[6][6] == colour:
-            my_tiles += 1
-        elif array[6][6] == opponent:
-            opp_tiles += 1
-        if array[7][6] == colour:
-            my_tiles += 1
-        elif array[7][6] == opponent:
-            opp_tiles += 1
-
-    l = -12.5 * (my_tiles - opp_tiles)
-
-    # Mobility
-    my_tiles = num_can_move
-    opp_tiles = num_valid_move(array, opponent)
-    if my_tiles > opp_tiles:
-        m = (100.0 * my_tiles) / (my_tiles + opp_tiles)
-    elif my_tiles < opp_tiles:
-        m = -(100.0 * opp_tiles) / (my_tiles + opp_tiles)
-    else:
-        m = 0
 
     # final weighted score
-    score = (10 * p) + (801.724 * c) + (382.026 * l) + (78.922 * m) + (74.396 * f) + (10 * d)
+    score = d
     return score
 
 
@@ -920,6 +814,8 @@ def valid(array, player, x, y):
 def clickHandle(event):
     global depth
     global AIwAI
+    global pop, fitness
+    WEIGHT = []
     AIwAI = False
     xMouse = event.x
     yMouse = event.y
@@ -959,10 +855,51 @@ def clickHandle(event):
             elif 380 <= xMouse <= 495:
                 AIwAI = True
                 depth = 4
-                playGame()
+                fitness = []
+                pop = []
+                for i in range(20):
+                    randomweight()
+                    playGame()
+                    pop.append(subweight)
+                    fitness.append(final_score)
+                genetic(fitness, pop)
 
+def genetic(fitness, pop):
+    for i in range(10):
+        a = randint(1, 20)
+        b = randint(1, 20)
+        if a == b:
+            i -= 1
+        crossover(pop[a], pop[b])
 
+def crossover(p1, p2):
+    a = random()
+    c1 = []
+    for i in range(10):
+        c1.append(a * p1[i] + (1 - a) * p2[i])
+    c1 = mutation(c1)
+    subweight = c1
+    pop.append(c1)
+    playGame()
+    fitness.append(final_score)
 
+    c2 = []
+    for i in range(10):
+        c2.append(a * p2[i] + (1 - a) * p1[i])
+    c2 = mutation(c2)
+    subweight = c2
+    make_WEIGHT()
+    playGame()
+    fitness.append(final_score)
+
+def mutation(child):
+    pmut = 0.3
+    pmchild = random();
+    if pmut <= pmchild:
+        noise = randint(-50, 50)
+        for i in range(10):
+            child[i] += noise
+    return child
 def keyHandle(event):
     symbol = event.keysym
     if symbol.lower() == "r":
@@ -1018,6 +955,7 @@ def runGame():
 
 def playGame():
     global board, running
+
     running = True
     screen.delete(ALL)
     create_buttons()
@@ -1029,6 +967,31 @@ def playGame():
     # Create the board and update it
     board = Board()
     board.update()
+
+def randomweight():
+    for i in range(10):
+        x = randint(-1000, 1000)
+        subweight.append(x)
+    make_WEIGHT()
+
+def make_WEIGHT():
+    WEIGHT.append([subweight[0], subweight[1], subweight[2], subweight[3], subweight[3], subweight[2], subweight[1],
+                   subweight[0]])
+    WEIGHT.append([subweight[1], subweight[4], subweight[5], subweight[6], subweight[6], subweight[5], subweight[4],
+                   subweight[1]])
+    WEIGHT.append([subweight[2], subweight[5], subweight[7], subweight[8], subweight[8], subweight[7], subweight[5],
+                   subweight[2]])
+    WEIGHT.append([subweight[3], subweight[6], subweight[8], subweight[9], subweight[9], subweight[8], subweight[6],
+                   subweight[3]])
+    WEIGHT.append([subweight[0], subweight[1], subweight[2], subweight[3], subweight[3], subweight[2], subweight[1],
+                   subweight[0]])
+    WEIGHT.append([subweight[1], subweight[4], subweight[5], subweight[6], subweight[6], subweight[5], subweight[4],
+                   subweight[1]])
+    WEIGHT.append([subweight[2], subweight[5], subweight[7], subweight[8], subweight[8], subweight[7], subweight[5],
+                   subweight[2]])
+    WEIGHT.append([subweight[3], subweight[6], subweight[8], subweight[9], subweight[9], subweight[8], subweight[6],
+                   subweight[3]])
+
 
 
 runGame()
